@@ -26,24 +26,23 @@ if not os.path.exists(MODEL_PATH):
 # -------------------------
 @st.cache_resource
 def load_deepfake_model():
-    return load_model(MODEL_PATH)  # Directly load .h5 trained on grayscale
+    return load_model(MODEL_PATH)  # Do NOT redefine layers
 
 # -------------------------
 # Preprocess uploaded images
 # -------------------------
 def preprocess_img(file):
-    # Load grayscale image (1 channel)
-    img = image.load_img(file, target_size=(224, 224), color_mode="grayscale")
-    arr = image.img_to_array(img)  # Shape: (224,224,1)
+    img = image.load_img(file, target_size=(224, 224), color_mode="rgb")  # RGB
+    arr = image.img_to_array(img)
     arr = np.expand_dims(arr, axis=0)
-    arr = preprocess_input(arr)  # Keep as-is
+    arr = preprocess_input(arr)
     return arr
 
 # -------------------------
 # Streamlit UI
 # -------------------------
 st.set_page_config(page_title="Deepfake Detection", page_icon="🕵️", layout="centered")
-st.title("🕵️ Deepfake Detection using EfficientNetB0 (Grayscale)")
+st.title("🕵️ Deepfake Detection using EfficientNetB0 (RGB)")
 
 # Load model
 try:
