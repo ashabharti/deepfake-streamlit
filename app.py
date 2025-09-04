@@ -1,6 +1,7 @@
 #to run the code
 #  https://share.streamlit.io/?
 
+# app.py
 import os
 import streamlit as st
 import numpy as np
@@ -12,22 +13,26 @@ from tensorflow.keras.applications.efficientnet import preprocess_input
 # -------------------------
 # Google Drive model details
 # -------------------------
-FILE_ID = "1StQVRwoRKxHWR82uwWNw6Msj88zTvoPq"  # Your .h5 File ID
+FILE_ID = "1StQVRwoRKxHWR82uwWNw6Msj88zTvoPq"  # Your .h5 file ID
 MODEL_PATH = "deepfake_model.h5"
 
-# Download model if it doesn't exist
+# Download model from Google Drive if not exists
 if not os.path.exists(MODEL_PATH):
     url = f"https://drive.google.com/uc?id={FILE_ID}"
     gdown.download(url, MODEL_PATH, quiet=False)
 
+# -------------------------
 # Load the trained model
+# -------------------------
 @st.cache_resource
 def load_deepfake_model():
-    return load_model(MODEL_PATH)
+    return load_model(MODEL_PATH)  # Directly load .h5 trained on RGB images
 
+# -------------------------
 # Preprocess uploaded images
+# -------------------------
 def preprocess_img(file):
-    img = image.load_img(file, target_size=(224, 224))  # RGB input
+    img = image.load_img(file, target_size=(224, 224))  # RGB image
     arr = image.img_to_array(img)
     arr = np.expand_dims(arr, axis=0)
     arr = preprocess_input(arr)
