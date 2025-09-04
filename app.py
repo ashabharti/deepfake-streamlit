@@ -1,40 +1,47 @@
+# app.py
 import os
 import streamlit as st
 import numpy as np
 import gdown
 from tensorflow.keras.models import load_model
-from tensorflow.keras.utils import load_img, img_to_array
+from tensorflow.keras.preprocessing import image
 from tensorflow.keras.applications.efficientnet import preprocess_input
 
-# ✅ Google Drive Model File ID (from your link)
-FILE_ID = '1StQVRwoRKxHWR82uwWNw6Msj88zTvoPq'
-
+# -------------------------
+# Google Drive model details
+# -------------------------
+FILE_ID = "1StQVRwoRKxHWR82uwWNw6Msj88zTvoPq"  # Your .h5 File ID
 MODEL_PATH = "deepfake_model.h5"
 
-def ensure_model():
-    """Download model from Google Drive if not already present"""
-    if not os.path.exists(MODEL_PATH):
-        url = f"https://drive.google.com/uc?id={FILE_ID}"
-        st.info("📥 Downloading model from Google Drive...")
-        gdown.download(url, MODEL_PATH, quiet=False)
+# Download model if it doesn't exist
+if not os.path.exists(MODEL_PATH):
+    url = f"https://drive.google.com/uc?id={FILE_ID}"
+    gdown.download(url, MODEL_PATH, quiet=False)
 
+# -------------------------
+# Load the trained model
+# -------------------------
 @st.cache_resource
 def load_deepfake_model():
-    ensure_model()
     return load_model(MODEL_PATH)
 
+# -------------------------
+# Preprocess uploaded images
+# -------------------------
 def preprocess_img(file):
-    """Preprocess uploaded image for EfficientNetB0"""
-    img = load_img(file, target_size=(224, 224))
-    arr = img_to_array(img)
+    img = image.load_img(file, target_size=(224, 224))  # RGB image
+    arr = image.img_to_array(img)
     arr = np.expand_dims(arr, axis=0)
     arr = preprocess_input(arr)
     return arr
 
-# ✅ Streamlit UI
+# -------------------------
+# Streamlit UI
+# -------------------------
 st.set_page_config(page_title="Deepfake Detection", page_icon="🕵️", layout="centered")
 st.title("🕵️ Deepfake Detection using EfficientNetB0")
 
+# Load model
 try:
     model = load_deepfake_model()
     st.success("✅ Model loaded successfully.")
@@ -42,6 +49,7 @@ except Exception as e:
     st.error(f"❌ Failed to load model: {e}")
     st.stop()
 
+# File uploader
 uploaded = st.file_uploader("📂 Upload an Image", type=["jpg","jpeg","png"])
 threshold = st.slider("Decision threshold", 0.0, 1.0, 0.5, 0.01)
 
@@ -60,6 +68,4 @@ if uploaded:
     st.markdown(f"### Result: **{label}**")
     st.write(f"Raw score: `{score:.4f}`")
     st.write(f"Confidence: `{confidence:.4f}`")
-
-
 
