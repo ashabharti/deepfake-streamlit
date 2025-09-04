@@ -7,7 +7,8 @@ from tensorflow.keras.utils import load_img, img_to_array
 from tensorflow.keras.applications.efficientnet import preprocess_input
 
 # ✅ Google Drive Model File ID (from your link)
-FILE_ID = "1rCujfPMTMPgpSJdrAdVG4UGCQaCsvhZD"
+FILE_ID = '1StQVRwoRKxHWR82uwWNw6Msj88zTvoPq'
+
 MODEL_PATH = "deepfake_model.h5"
 
 def ensure_model():
@@ -59,5 +60,6 @@ if uploaded:
     st.markdown(f"### Result: **{label}**")
     st.write(f"Raw score: `{score:.4f}`")
     st.write(f"Confidence: `{confidence:.4f}`")
+
 
 
