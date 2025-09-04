@@ -1,3 +1,6 @@
+#to run the code
+#  https://share.streamlit.io/?
+
 # app.py
 import os
 import streamlit as st
@@ -68,4 +71,5 @@ if uploaded:
     st.markdown(f"### Result: **{label}**")
     st.write(f"Raw score: `{score:.4f}`")
     st.write(f"Confidence: `{confidence:.4f}`")
+
 
