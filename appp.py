@@ -2,8 +2,11 @@
 # -------------------------------
 # Streamlit Deepfake Detection App
 # -------------------------------
+import os
 import streamlit as st
 import numpy as np
+import pandas as pd
+import gdown
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout
 from tensorflow.keras.applications import EfficientNetB0
@@ -12,67 +15,93 @@ from tensorflow.keras.preprocessing import image
 from PIL import Image
 
 # -------------------------------
-# 1️⃣ Build Model (same as training)
+# 1️⃣ Google Drive Weights Config
 # -------------------------------
-def build_model():
-    # ⚠️ Use weights=None so it matches your fine-tuned model weights
+FILE_ID = "1ksJDgcgHN4T12rsGKwoW3FrmqffDyAJ8"   # 🔹 Replace with your own file ID
+WEIGHTS_PATH = "deepfake_img_weights.weights.h5"   # 🔹 Local name to save weights
+
+# Download weights if not already available
+if not os.path.exists(WEIGHTS_PATH):
+    with st.spinner("⏳ Downloading model weights from Google Drive..."):
+        url = f"https://drive.google.com/uc?id={FILE_ID}"
+        gdown.download(url, WEIGHTS_PATH, quiet=False)
+    st.success("✅ Weights downloaded successfully!")
+
+# -------------------------------
+# 2️⃣ Build Model + Load Weights
+# -------------------------------
+def build_model_for_inference():
     base_model = EfficientNetB0(weights=None, include_top=False, input_shape=(224,224,3))
-    x = base_model.output
-    x = GlobalAveragePooling2D()(x)
+    x = GlobalAveragePooling2D()(base_model.output)
     x = Dense(128, activation='relu')(x)
     x = Dropout(0.3)(x)
     output = Dense(1, activation='sigmoid')(x)
     model = Model(inputs=base_model.input, outputs=output)
-    return model
-
-# Path to weights
-WEIGHTS_PATH = "deepfake_img_weights.weights.h5"
-
-# Load model + weights
-@st.cache_resource
-def load_model():
-    model = build_model()
     model.load_weights(WEIGHTS_PATH)
     return model
 
-model = load_model()
+@st.cache_resource
+def load_deepfake_model():
+    return build_model_for_inference()
 
 # -------------------------------
-# 2️⃣ Streamlit Layout
+# 3️⃣ Preprocess Uploaded Images
 # -------------------------------
-st.set_page_config(page_title="Deepfake Detector", page_icon="🕵️", layout="centered")
+def preprocess_img(file):
+    img = Image.open(file).convert("RGB")
+    img = img.resize((224, 224))
+    arr = image.img_to_array(img)
+    arr = np.expand_dims(arr, axis=0)
+    arr = preprocess_input(arr)
+    return arr
 
-st.title("🕵️ Deepfake Detection App")
-st.write("Upload an image and the model will predict whether it is **Real** or **Fake**.")
+# -------------------------------
+# 4️⃣ Streamlit UI
+# -------------------------------
+st.set_page_config(page_title="Deepfake Detection", page_icon="🕵️", layout="centered")
+st.title("🕵️ Deepfake Detection (EfficientNetB0)")
 
-uploaded_file = st.file_uploader("Upload an image...", type=["jpg", "jpeg", "png"])
+# Load model safely
+try:
+    model = load_deepfake_model()
+    st.success("✅ Model loaded successfully!")
+except Exception as e:
+    st.error(f"❌ Failed to load model: {e}")
+    st.stop()
 
-if uploaded_file is not None:
-    # Show uploaded image
-    img = Image.open(uploaded_file).convert("RGB")
-    st.image(img, caption="Uploaded Image", use_column_width=True)
+# File uploader
+uploaded_files = st.file_uploader(
+    "📂 Upload Image(s)", type=["jpg","jpeg","png"], accept_multiple_files=True
+)
 
-    # Preprocess
-    img_resized = img.resize((224,224))
-    img_array = image.img_to_array(img_resized)
-    img_array = np.expand_dims(img_array, axis=0)
-    img_array = preprocess_input(img_array)
+threshold = st.slider("Decision threshold", 0.0, 1.0, 0.5, 0.01)
 
-    # Predict
-    pred = model.predict(img_array)[0][0]
-    label = "Real" if pred > 0.5 else "Fake"
-    confidence = pred if pred > 0.5 else 1 - pred
+if uploaded_files:
+    results = []
+    for uploaded in uploaded_files:
+        st.image(uploaded, caption=f"Uploaded: {uploaded.name}", use_column_width=True)
+        arr = preprocess_img(uploaded)
+        score = float(model.predict(arr)[0][0])
 
-    # Show result
-    st.subheader("🔍 Prediction Result")
-    st.markdown(f"**Class:** {label}")
-    st.markdown(f"**Confidence:** {confidence*100:.2f}%")
+        if score >= threshold:
+            label = "🔴 Fake"
+            confidence = score
+        else:
+            label = "🟢 Real"
+            confidence = 1 - score
 
-    # Progress bar
-    st.progress(float(confidence))
+        results.append({
+            "Filename": uploaded.name,
+            "Result": label,
+            "Raw Score": round(score, 4),
+            "Confidence": round(confidence, 4)
+        })
 
-    # Debug raw score
-    st.caption(f"Raw model output: {pred:.4f}")
+    df = pd.DataFrame(results)
+    st.markdown("### 📊 Results")
+    st.dataframe(df)
 
-else:
-    st.info("👆 Please upload an image to start prediction.")
+    csv = df.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        "📥 Download Results", data=csv, file_name="deepfake_results.csv", mime="text/csv"
+    )
