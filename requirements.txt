@@ -1,9 +1,10 @@
 streamlit==1.37.0
-tensorflow==2.16.2
+tensorflow-cpu==2.12.0
 pillow==10.4.0
 numpy==1.26.4
 pandas==2.2.2
 gdown==5.2.0
 h5py==3.11.0
+
 
 
