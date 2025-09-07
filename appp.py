@@ -25,7 +25,7 @@ if not os.path.exists(WEIGHTS_PATH):
     with st.spinner("⏳ Downloading model weights from Google Drive..."):
         url = f"https://drive.google.com/uc?id={FILE_ID}"
         gdown.download(url, WEIGHTS_PATH, quiet=False)
-    st.success("✅ Weights downloaded successfully!")
+  #  st.success("✅ Weights downloaded successfully!")
 
 # -------------------------------
 # 2️⃣ Build Model + Load Weights
@@ -64,7 +64,7 @@ st.title("🕵️ Deepfake Detection (EfficientNetB0)")
 # Load model safely
 try:
     model = load_deepfake_model()
-    st.success("✅ Model loaded successfully!")
+ #   st.success("✅ Model loaded successfully!")
 except Exception as e:
     st.error(f"❌ Failed to load model: {e}")
     st.stop()
