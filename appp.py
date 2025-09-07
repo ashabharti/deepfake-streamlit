@@ -17,7 +17,7 @@ from PIL import Image
 # -------------------------------
 # 1️⃣ Google Drive Weights Config
 # -------------------------------
-FILE_ID = "1ksJDgcgHN4T12rsGKwoW3FrmqffDyAJ8"   # 🔹 Replace with your own file ID
+FILE_ID = "1ksJDgcgHN4T12rsGKwoW3FrmqffDyAJ8"      # 🔹  file ID
 WEIGHTS_PATH = "deepfake_img_weights.weights.h5"   # 🔹 Local name to save weights
 
 # Download weights if not already available
