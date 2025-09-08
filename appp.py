@@ -84,10 +84,10 @@ if uploaded_files:
         score = float(model.predict(arr)[0][0])
 
         if score >= threshold:
-            label = "🔴 Fake"
+            label = " Fake"
             confidence = score
         else:
-            label = "🟢 Real"
+            label = " Real"
             confidence = 1 - score
 
         results.append({
